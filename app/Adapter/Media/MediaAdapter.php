@@ -38,4 +38,9 @@ class MediaAdapter implements MediaServiceContract
     {
         return $this->service->getUrl();
     }
+
+    public function apply()
+    {
+        return $this->service->apply();
+    }
 }

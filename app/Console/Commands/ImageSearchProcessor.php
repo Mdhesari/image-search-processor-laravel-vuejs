@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Contracts\ImageAPIService\ImageAPIServiceContract;
 use App\Contracts\ImageRepository\ImageRepositoryContract;
 use App\Contracts\Media\MediaServiceContract;
+use App\Services\Media\MediaConversion;
 use App\Services\SerAPI\Exceptions\SerAPIException;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Cache;
@@ -45,8 +46,10 @@ class ImageSearchProcessor extends Command
                 'width'  => config('services.media.conversion_width'),
                 'height' => config('services.media.conversion_height'),
             ];
-            foreach ($items as $item) {
-                $item['image'] = app(MediaServiceContract::class)->mediaUrl($item['original'])->conversion($conversion)->getUrl();
+            foreach ($items as $key => $item) {
+                $items[$key]['image'] = app(MediaServiceContract::class)->mediaUrl($item['original'])->conversion(
+                    new MediaConversion($conversion['width'], $conversion['height'])
+                )->apply()->save()->getUrl();
             }
 
             app(ImageRepositoryContract::class)->storeMany($items);

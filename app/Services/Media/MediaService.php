@@ -3,16 +3,13 @@
 namespace App\Services\Media;
 
 use Illuminate\Http\File;
-use League\Flysystem\FilesystemOperator;
 
 class MediaService
 {
-    private File $media;
-
     public function __construct(
-        private FilesystemOperator $operator,
-        private MediaConfig        $config,
-        private ?MediaConversion   $conversion = null
+        private                  $fileAdapter,
+        private MediaConfig      $config,
+        private ?MediaConversion $conversion = null
     )
     {
         //
@@ -21,8 +18,6 @@ class MediaService
     /**
      * @param string $url
      * @return $this
-     * @throws \Exception
-     * @throws \League\Flysystem\FilesystemException
      */
     public function mediaUrl(string $url)
     {
@@ -37,7 +32,7 @@ class MediaService
             $path .= '.png';
         }
 
-        $this->operator->write($this->config->path($path), $content);
+        $this->fileAdapter->put($this->config->path($path), $content);
 
         return $this;
     }
@@ -69,6 +64,34 @@ class MediaService
      */
     public function getUrl(): ?string
     {
-        return $this->operator->publicUrl($this->config->Path);
+        return $this->fileAdapter->url($this->config->Path);
+    }
+
+    /**
+     * @return $this
+     * @throws \Exception
+     */
+    public function apply(): static
+    {
+        $this->conversion->load($this->fileAdapter->path($this->config->Path))->apply();
+
+        return $this;
+    }
+
+    /**
+     * @param int $quality
+     * @return MediaService
+     * @throws \Exception
+     */
+    public function save(int $quality = -1)
+    {
+        $p = explode('.', $this->config->Path);
+        $p[count($p) - 2] = $p[count($p) - 2].'_conversion';
+        $p = implode('.', $p);
+        $this->config->Path = $p;
+
+        $this->conversion->save($this->fileAdapter->path($p), $quality);
+
+        return $this;
     }
 }

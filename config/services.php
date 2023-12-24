@@ -15,8 +15,8 @@ return [
     */
 
     'media' => [
-        'conversion_width'  => env('MEDIA_CONVERSION_WIDTH', 300),
-        'conversion_height' => env('MEDIA_CONVERSION_HEIGHT', 100),
+        'conversion_width'  => env('MEDIA_CONVERSION_WIDTH', 1000),
+        'conversion_height' => env('MEDIA_CONVERSION_HEIGHT', 1000),
     ],
 
     'serapi' => [

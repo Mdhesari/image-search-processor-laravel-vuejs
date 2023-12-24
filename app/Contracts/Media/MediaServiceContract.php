@@ -13,4 +13,6 @@ interface MediaServiceContract
     public function conversion(array $conversion);
 
     public function getUrl();
+
+    public function apply();
 }
