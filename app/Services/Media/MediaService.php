@@ -19,7 +19,7 @@ class MediaService
      * @param string $url
      * @return $this
      */
-    public function mediaUrl(string $url)
+    public function mediaUrl(string $url): static
     {
         $content = file_get_contents($url);
 
@@ -83,14 +83,9 @@ class MediaService
      * @return MediaService
      * @throws \Exception
      */
-    public function save(int $quality = -1)
+    public function save(int $quality = -1): static
     {
-        $p = explode('.', $this->config->Path);
-        $p[count($p) - 2] = $p[count($p) - 2].'_conversion';
-        $p = implode('.', $p);
-        $this->config->Path = $p;
-
-        $this->conversion->save($this->fileAdapter->path($p), $quality);
+        $this->conversion->save($this->fileAdapter->path($this->config->Path), $quality);
 
         return $this;
     }
