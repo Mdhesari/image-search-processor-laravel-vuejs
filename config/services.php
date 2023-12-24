@@ -14,6 +14,11 @@ return [
     |
     */
 
+    'media' => [
+        'conversion_width'  => env('MEDIA_CONVERSION_WIDTH', 300),
+        'conversion_height' => env('MEDIA_CONVERSION_HEIGHT', 100),
+    ],
+
     'serapi' => [
         'key' => env('SERAPI_API_KEY'),
     ],

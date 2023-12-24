@@ -2,12 +2,16 @@
 
 namespace App\Providers;
 
-use App\Adapter\SerAPI\SerAPIAdapter;
 use App\Contracts\ImageAPIService\ImageAPIServiceContract;
 use App\Contracts\ImageRepository\ImageRepositoryContract;
+use App\Contracts\Media\MediaServiceContract;
 use App\Repositories\Postgres\ImageRepository;
+use App\Services\Media\MediaConfig;
+use App\Services\Media\MediaService;
+use App\Services\SerAPI\SerAPIService;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -18,11 +22,15 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->singleton(ImageAPIServiceContract::class, function (Application $app) {
-            return new SerAPIAdapter(config('services.serapi.key'));
+            return new SerAPIService(config('services.serapi.key'));
         });
 
         $this->app->bind(ImageRepositoryContract::class, function (Application $app) {
             return new ImageRepository(DB::Connection(), 'images');
+        });
+
+        $this->app->singleton(MediaServiceContract::class, function (Application $app) {
+            return new MediaService(Storage::disk(), new MediaConfig('media', 10000));
         });
     }
 
@@ -31,6 +39,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        Storage::url();
     }
 }

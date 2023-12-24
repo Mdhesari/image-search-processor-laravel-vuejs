@@ -9,7 +9,7 @@ class ImageRepository implements ImageRepositoryContract
 {
     public function __construct(
         private ConnectionInterface $connection,
-        private string             $table
+        private string              $table
     )
     {
         //
@@ -25,7 +25,7 @@ class ImageRepository implements ImageRepositoryContract
         $items = array_map(fn($item) => [
             'title'           => $item['title'],
             'query'           => $item['query'] ?? '',//TODO: should retrieve query
-            'image'           => $item['original'],
+            'image'           => $item['image'],
             'original'        => $item['original'],
             'original_width'  => $item['original_width'],
             'original_height' => $item['original_height'],

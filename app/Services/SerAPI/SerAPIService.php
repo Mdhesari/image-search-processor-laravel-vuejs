@@ -2,10 +2,11 @@
 
 namespace App\Services\SerAPI;
 
+use App\Contracts\ImageAPIService\ImageAPIServiceContract;
 use App\Services\SerAPI\Exceptions\SerAPIException;
 use Illuminate\Support\Facades\Http;
 
-class SerAPIService
+class SerAPIService implements ImageAPIServiceContract
 {
     public function __construct(
         private string $apiKey

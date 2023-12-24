@@ -4,8 +4,10 @@ namespace App\Console\Commands;
 
 use App\Contracts\ImageAPIService\ImageAPIServiceContract;
 use App\Contracts\ImageRepository\ImageRepositoryContract;
+use App\Contracts\Media\MediaServiceContract;
 use App\Services\SerAPI\Exceptions\SerAPIException;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
 class ImageSearchProcessor extends Command
@@ -15,7 +17,7 @@ class ImageSearchProcessor extends Command
      *
      * @var string
      */
-    protected $signature = 'app:process {query} {--count=10}';
+    protected $signature = 'app:process {query} {--count=1}';
 
     /**
      * The console command description.
@@ -33,9 +35,19 @@ class ImageSearchProcessor extends Command
         $count = $this->option('count');
 
         try {
-            $searchResult = app(ImageApiServiceContract::class)->search($query);
+            $items = Cache::rememberForever('test', function () use ($query, $count) {
+                $searchResult = app(ImageApiServiceContract::class)->search($query);
 
-            $items = array_slice($searchResult['images_results'], 0, $count);
+                return array_slice($searchResult['images_results'], 0, $count);
+            });
+
+            $conversion = [
+                'width'  => config('services.media.conversion_width'),
+                'height' => config('services.media.conversion_height'),
+            ];
+            foreach ($items as $item) {
+                $item['image'] = app(MediaServiceContract::class)->mediaUrl($item['original'])->conversion($conversion)->getUrl();
+            }
 
             app(ImageRepositoryContract::class)->storeMany($items);
 
