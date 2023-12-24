@@ -7,6 +7,7 @@ use App\Services\Media\MediaConversion;
 use App\Services\Media\MediaService;
 use Illuminate\Http\File;
 
+// Separation of concerns
 class MediaAdapter implements MediaServiceContract
 {
     public function __construct(
