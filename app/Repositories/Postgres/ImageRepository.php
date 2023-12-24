@@ -3,12 +3,12 @@
 namespace App\Repositories\Postgres;
 
 use App\Contracts\ImageRepository\ImageRepositoryContract;
-use Illuminate\Database\PostgresConnection;
+use Illuminate\Database\ConnectionInterface;
 
 class ImageRepository implements ImageRepositoryContract
 {
     public function __construct(
-        private PostgresConnection $connection,
+        private ConnectionInterface $connection,
         private string             $table
     )
     {
