@@ -18,7 +18,7 @@ class ImageSearchProcessor extends Command
      *
      * @var string
      */
-    protected $signature = 'app:process {query} {--count=1}';
+    protected $signature = 'app:process {query} {--count=10}';
 
     /**
      * The console command description.
