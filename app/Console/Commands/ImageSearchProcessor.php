@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Contracts\ImageAPIService\ImageAPIServiceContract;
 use App\Contracts\ImageRepository\ImageRepositoryContract;
+use App\Services\SerAPI\Exceptions\SerAPIException;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 
@@ -33,24 +34,21 @@ class ImageSearchProcessor extends Command
 
         try {
             $searchResult = app(ImageApiServiceContract::class)->search($query);
-        } catch (\Exception $e) {
-            Log::critical('SerAPI service error: '.$e->getMessage());
 
-            $this->error($e->getMessage());
-
-            return;
-        }
-
-        try {
             $items = array_slice($searchResult['images_results'], 0, $count);
 
             app(ImageRepositoryContract::class)->storeMany($items);
 
             $this->info('Images are store in db successfully...');
+        } catch (SerAPIException $e) {
+            Log::critical('SerAPI service error: '.$e->getMessage());
+
+            $this->error($e->getMessage());
         } catch (\Exception $e) {
-            Log::critical('Image repository error: '.$e->getMessage());
+            Log::critical($e->getMessage());
 
             $this->error($e->getMessage());
         }
+
     }
 }

@@ -14,15 +14,14 @@ return new class extends Migration {
             $table->id();
 
             $table->string('title')->nullable();
-            $table->string('image');
-            $table->string('original');
+            $table->string('query')->nullable();
+            $table->text('image');
+            $table->text('original');
 
             $table->unsignedInteger('original_width');
             $table->unsignedInteger('original_height');
             $table->unsignedInteger('resized_width');
             $table->unsignedInteger('resized_height');
-
-            $table->timestamps();
         });
     }
 
