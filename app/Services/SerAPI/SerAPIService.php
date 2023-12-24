@@ -16,10 +16,10 @@ class SerAPIService
 
     /**
      * @param string $query
-     * @return array|mixed
+     * @return array
      * @throws SerAPIException
      */
-    public function search(string $query): mixed
+    public function search(string $query): array
     {
         $response = Http::get("https://serpapi.com/search.json?engine=google_images&api_key={$this->apiKey}&q={$query}&hl=en&gl=us&tbs=il:cl");
         if (isset($response['error'])) {
