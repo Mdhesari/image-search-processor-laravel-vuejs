@@ -53,6 +53,7 @@ class ProcessImageJob implements ShouldQueue
      */
     public function middleware(): array
     {
+        // It does not matter if other image processor are failed
         return [new SkipIfBatchCancelled];
     }
 }
