@@ -2,7 +2,6 @@
 
 namespace App\Providers;
 
-use App\Adapter\Media\MediaAdapter;
 use App\Contracts\ImageAPIService\ImageAPIServiceContract;
 use App\Contracts\ImageRepository\ImageRepositoryContract;
 use App\Contracts\Media\MediaServiceContract;
@@ -31,9 +30,7 @@ class AppServiceProvider extends ServiceProvider
         });
 
         $this->app->singleton(MediaServiceContract::class, function (Application $app) {
-            return new MediaAdapter(
-                new MediaService(Storage::getFacadeRoot(), new MediaConfig('media', 10000))
-            );
+            return new MediaService(Storage::getFacadeRoot(), new MediaConfig('media', 10000));
         });
     }
 

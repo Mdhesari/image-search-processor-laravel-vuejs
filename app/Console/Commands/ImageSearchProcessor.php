@@ -3,11 +3,11 @@
 namespace App\Console\Commands;
 
 use App\Contracts\ImageAPIService\ImageAPIServiceContract;
-use App\Contracts\ImageRepository\ImageRepositoryContract;
-use App\Contracts\Media\MediaServiceContract;
+use App\Jobs\ProcessImageJob;
 use App\Services\Media\MediaConversion;
 use App\Services\SerAPI\Exceptions\SerAPIException;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
@@ -29,6 +29,7 @@ class ImageSearchProcessor extends Command
 
     /**
      * Execute the console command.
+     * @throws \Throwable
      */
     public function handle()
     {
@@ -42,17 +43,18 @@ class ImageSearchProcessor extends Command
                 return array_slice($searchResult['images_results'], 0, $count);
             });
 
-            $conversion = [
-                'width'  => config('services.media.conversion_width'),
-                'height' => config('services.media.conversion_height'),
-            ];
-            foreach ($items as $key => $item) {
-                $items[$key]['image'] = app(MediaServiceContract::class)->mediaUrl($item['original'])->conversion(
-                    new MediaConversion($conversion['width'], $conversion['height'])
-                )->apply()->save()->getUrl();
-            }
+            $conversion = new MediaConversion(
+                config('services.media.conversion_width'),
+                config('services.media.conversion_height')
+            );
 
-            app(ImageRepositoryContract::class)->storeMany($items);
+            /**
+             * We have different solutions for running image processing concurrently here we will be using laravel built in job batch
+             */
+            $items = array_map(fn($i) => new ProcessImageJob($i, $conversion), $items);
+            $batch = Bus::batch($items)->dispatch();
+
+            $this->info('batching '.$batch->id);
 
             $this->info('Images are store in db successfully...');
         } catch (SerAPIException $e) {
@@ -62,7 +64,7 @@ class ImageSearchProcessor extends Command
         } catch (\Exception $e) {
             Log::critical($e->getMessage());
 
-            $this->error($e->getMessage());
+            throw $e;
         }
 
     }

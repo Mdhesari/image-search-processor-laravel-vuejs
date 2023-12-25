@@ -2,9 +2,10 @@
 
 namespace App\Services\Media;
 
+use App\Contracts\Media\MediaServiceContract;
 use Illuminate\Http\File;
 
-class MediaService
+class MediaService implements MediaServiceContract
 {
     public function __construct(
         private                  $fileAdapter,
@@ -19,9 +20,21 @@ class MediaService
      * @param string $url
      * @return $this
      */
-    public function mediaUrl(string $url): static
+    public function mediaFromUrl(string $url)
     {
         $content = file_get_contents($url);
+        $mimetype = null;
+
+        foreach ($http_response_header as $v) {
+            if (preg_match('/^content\-type:\s*(image\/[^;\s\n\r]+)/i', $v, $m)) {
+                $mimetype = $m[1];
+            }
+        }
+
+        if (! $mimetype) {
+
+            return null;
+        }
 
         // We are using the same file name exists in url
         $path = pathinfo($url, PATHINFO_BASENAME);

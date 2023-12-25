@@ -20,23 +20,29 @@ class MediaConversion
     /**
      * @param $path
      * @return MediaConversion
+     * @throws \Exception
      */
     public function load($path)
     {
         $image_info = getimagesize($path);
+        if (! $image_info) {
+
+            throw new \Exception('Invalid source image.');
+        }
         $this->imageType = $image_info[2];
-        if ($this->imageType == IMAGETYPE_JPEG) {
 
-            $this->image = imagecreatefromjpeg($path);
-        } elseif ($this->imageType == IMAGETYPE_GIF) {
-
-            $this->image = imagecreatefromgif($path);
-        } elseif ($this->imageType == IMAGETYPE_PNG) {
-
-            $this->image = imagecreatefrompng($path);
-        } else {
-            //TODO: more extensions?
-
+        switch ($this->imageType) {
+            case IMAGETYPE_JPEG:
+                $this->image = imagecreatefromjpeg($path);
+                break;
+            case IMAGETYPE_GIF:
+                $this->image = imagecreatefromgif($path);
+                break;
+            case IMAGETYPE_PNG:
+                $this->image = imagecreatefrompng($path);
+                break;
+            default:
+                //TODO: more extensions?
         }
 
         return $this;
