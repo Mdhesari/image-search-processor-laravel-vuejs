@@ -24,21 +24,18 @@ class ImageController extends Controller
 
     public function searchProcess(SearchProcessRequest $req, ImageAPIServiceContract $imgSrv, MediaServiceContract $mediaSrv)
     {
-        $response = new ResponseResource([]);
-
-        $query = $req->query;
-        $count = $req->count;
+        $data = $req->validated();
 
         try {
-            $items = Cache::rememberForever('test', function () use ($query, $count) {
-                $searchResult = app(ImageApiServiceContract::class)->search($query);
+            $items = Cache::remember('image:'.$data['query'].$data['count'], now()->addMinutes(5), function () use ($data) {
+                $searchResult = app(ImageApiServiceContract::class)->search($data['query']);
 
-                return array_slice($searchResult['images_results'], 0, $count);
+                return array_slice($searchResult['images_results'], 0, $data['count']);
             });
 
             $conversion = new MediaConversion(
-                config('services.media.conversion_width'),
-                config('services.media.conversion_height')
+                $data['width'] ?? config('services.media.conversion_width'),
+                $data['height'] ?? config('services.media.conversion_height')
             );
 
             /**

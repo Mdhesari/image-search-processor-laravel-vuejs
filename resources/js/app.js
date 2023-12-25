@@ -5,7 +5,11 @@
  */
 
 import './bootstrap';
-import { createApp } from 'vue';
+import {createApp} from 'vue';
+import GalleryComponent from './components/GalleryComponent.vue';
+import SearchComponent from './components/SearchComponent.vue';
+import SuccessComponent from './components/Alerts/SucessComponent.vue';
+import FailureComponent from './components/Alerts/FailureComponent.vue';
 
 /**
  * Next, we will create a fresh Vue application instance. You may then begin
@@ -15,11 +19,10 @@ import { createApp } from 'vue';
 
 const app = createApp({});
 
-import GalleryComponent from './components/GalleryComponent.vue';
-import SearchComponent from './components/SearchComponent.vue';
-
-app.component('search', SearchComponent)
+app.component('search', SearchComponent);
 app.component('gallery', GalleryComponent);
+app.component('alert-success', SuccessComponent);
+app.component('alert-failure', FailureComponent);
 
 /**
  * The following block of code may be used to automatically register your

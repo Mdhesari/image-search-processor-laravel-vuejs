@@ -22,8 +22,10 @@ class SearchProcessRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'query' => 'required|string',
-            'count' => 'required|numeric|max:100', // limit the count because of vulnerabilities
+            'query'  => 'required|string',
+            'count'  => 'required|numeric|max:100', // limit the count because of vulnerabilities
+            'width'  => 'nullable|numeric',
+            'height' => 'nullable|numeric',
         ];
     }
 }

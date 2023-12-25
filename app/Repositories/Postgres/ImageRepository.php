@@ -10,6 +10,8 @@ use Illuminate\Database\ConnectionInterface;
  */
 class ImageRepository implements ImageRepositoryContract
 {
+    const DEFAULT_PER_PAGE = 10;
+
     public function __construct(
         private ConnectionInterface $connection,
         private string              $table
@@ -63,6 +65,8 @@ class ImageRepository implements ImageRepositoryContract
             'original_height' => $item['original_height'],
             'resized_width'   => $item['resized_width'],
             'resized_height'  => $item['resized_height'],
+            'updated_at'      => now(),
+            'created_at'      => now(),
         ];
 
         $res = $this->builder()->insert($item);
@@ -72,10 +76,10 @@ class ImageRepository implements ImageRepositoryContract
         }
     }
 
-    public function getAll(?array $params = null): \Illuminate\Support\Collection
+    public function getAll(?array $params = null)
     {
-        //TODO: shall we have some params
+        $params['per_page'] = $params['per_page'] ?? self::DEFAULT_PER_PAGE;
 
-        return $this->builder()->get();
+        return $this->builder()->latest()->paginate($params['per_page']);
     }
 }

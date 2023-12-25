@@ -4,8 +4,9 @@
             Gallery
         </h2>
         <div class="lg:gap-2 lg:grid lg:grid-cols-3">
+            <p v-if="this.images.length < 1">Getting New Images...</p>
             <div class="w-full rounded" v-for="image in images" :key="image.id">
-                <img :src="image.image" alt="image"/>
+                <img v-if="this.images.length" :src="image.image" alt="image"/>
             </div>
         </div>
     </div>
@@ -14,9 +15,7 @@
 <script>
 export default {
     mounted() {
-        console.log('hi')
         axios.get('/api/images').then(({data}) => {
-            console.log(data)
             this.images = data.data
         })
     },
@@ -24,6 +23,6 @@ export default {
         return {
             images: [],
         };
-    },
+    }
 };
 </script>

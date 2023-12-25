@@ -22,6 +22,8 @@ return new class extends Migration {
             $table->unsignedInteger('original_height');
             $table->unsignedInteger('resized_width');
             $table->unsignedInteger('resized_height');
+
+            $table->timestamps();
         });
     }
 

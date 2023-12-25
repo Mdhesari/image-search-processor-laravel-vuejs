@@ -1,5 +1,7 @@
 <template>
     <div class="mb-4 px-2 w-full">
+        <alert-success v-if="success" title="Successfully processed." :description="successMessage"></alert-success>
+        <alert-failure v-if="error !== ''" :title="error"/>
         <div class="relative">
             <div class="absolute left-0 inset-y-0 pl-3 flex items-center">
                 <svg class="fill-current h-6 w-6 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
@@ -27,6 +29,13 @@
             +
         </div>
 
+        <input v-model="width"
+               class="w-full border ml-2 px-4 py-2 focus:border-blue-500 focus:shadow-outline outline-none outline-none"
+               type="text" placeholder="Resize Width..."/>
+        <input v-model="height"
+               class="w-full border ml-2 px-4 py-2 focus:border-blue-500 focus:shadow-outline outline-none outline-none"
+               type="text" placeholder="Resize Height..."/>
+
         <button @click="process"
                 class="mx-2 px-4 py-2 text-sm rounded text-gray-800 border focus:outline-none hover:bg-gray-100">Process
         </button>
@@ -38,12 +47,30 @@
 export default {
     methods: {
         process() {
+            this.error = ""
             axios.post('api/images/search-process', {
                 query: this.query,
-                count: this.count
+                count: this.count,
+                width: this.width,
+                height: this.height
             }).then(({data}) => {
-                console.log(data)
+                this.success = true
+                this.successMessage = "Image search is processing your request."
+
+                setTimeout(() => this.success = false, 5000)
+            }).catch(({response}) => {
+                if (response.data?.errors) {
+                    let errors = response.data.errors
+                    for (let err in errors) {
+                        this.error += errors[err][0]
+                    }
+                } else {
+                    alert('something went wrong!')
+                }
+                // response.data.errors.map
             })
+
+            //TODO: trigger event to gallery for loading new images
         },
         increase() {
             this.count++;
@@ -56,8 +83,13 @@ export default {
     },
     data() {
         return {
-            query: 'pets',
+            query: '',
             count: 10,
+            width: 1000,
+            height: 1000,
+            success: false,
+            successMessage: "",
+            error: ""
         };
     },
 };
