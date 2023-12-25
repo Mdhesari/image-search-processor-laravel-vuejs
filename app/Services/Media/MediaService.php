@@ -19,6 +19,7 @@ class MediaService implements MediaServiceContract
     /**
      * @param string $url
      * @return $this
+     * @throws \Exception
      */
     public function mediaFromUrl(string $url)
     {
@@ -30,10 +31,9 @@ class MediaService implements MediaServiceContract
                 $mimetype = $m[1];
             }
         }
-
         if (! $mimetype) {
 
-            return null;
+            throw new \Exception('Mime Type is invalid.');
         }
 
         // We are using the same file name exists in url

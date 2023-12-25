@@ -10,6 +10,7 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Queue\Middleware\SkipIfBatchCancelled;
 use Illuminate\Queue\SerializesModels;
 
 class ProcessImageJob implements ShouldQueue
@@ -45,5 +46,13 @@ class ProcessImageJob implements ShouldQueue
         $this->item['resized_height'] = $this->conversion->Height;
 
         $repo->store($this->item);
+    }
+
+    /**
+     * Get the middleware the job should pass through.
+     */
+    public function middleware(): array
+    {
+        return [new SkipIfBatchCancelled];
     }
 }
