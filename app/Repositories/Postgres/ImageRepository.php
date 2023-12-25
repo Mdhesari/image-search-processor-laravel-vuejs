@@ -29,7 +29,7 @@ class ImageRepository implements ImageRepositoryContract
         // filter
         $items = array_map(fn($item) => [
             'title'           => $item['title'],
-            'query'           => $item['query'] ?? '',//TODO: should retrieve query
+            'query'           => $item['query'],
             'image'           => $item['image'],
             'original'        => $item['original'],
             'original_width'  => $item['original_width'],

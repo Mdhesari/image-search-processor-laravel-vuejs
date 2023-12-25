@@ -2,16 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Contracts\ImageAPIService\ImageAPIServiceContract;
 use App\Contracts\ImageRepository\ImageRepositoryContract;
 use App\Http\Requests\SearchProcessRequest;
 use App\Http\Resources\ImageResource;
 use App\Http\Resources\ResponseResource;
-use App\Jobs\ProcessImageJob;
+use App\Jobs\HandleProcessImageJob;
 use App\Services\Media\MediaConversion;
 use App\Services\SerAPI\Exceptions\SerAPIException;
-use Illuminate\Support\Facades\Bus;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
 class ImageController extends Controller
@@ -27,35 +24,22 @@ class ImageController extends Controller
 
     /**
      * @param SearchProcessRequest $req
-     * @param ImageAPIServiceContract $imgSrv
      * @return ResponseResource
      * @throws \Throwable
      */
-    public function searchProcess(SearchProcessRequest $req, ImageAPIServiceContract $imgSrv)
+    public function searchProcess(SearchProcessRequest $req): ResponseResource
     {
         $data = $req->validated();
 
         try {
-            $items = Cache::remember('image:'.$data['query'].$data['count'], now()->addMinutes(5), function () use ($data, $imgSrv) {
-                $searchResult = $imgSrv->search($data['query']);
-
-                return array_slice($searchResult['images_results'], 0, $data['count']);
-            });
-
             $conversion = new MediaConversion(
                 $data['width'] ?? config('services.media.conversion_width'),
                 $data['height'] ?? config('services.media.conversion_height')
             );
 
-            /**
-             * We have different solutions for running image processing concurrently here we will be using laravel built in job batch
-             */
-            $items = array_map(fn($i) => new ProcessImageJob($i, $conversion), $items);
-            $batch = Bus::batch($items)->dispatch();
+            dispatch(new HandleProcessImageJob($data['query'], $data['count'], $conversion));
 
-            $response = new ResponseResource([
-                'batch' => $batch->id,
-            ]);
+            $response = new ResponseResource([]);
         } catch (SerAPIException $e) {
             Log::critical('SerAPI service error: '.$e->getMessage());
 
