@@ -1,5 +1,10 @@
 <template>
     <div class="container mx-auto mt-4">
+        <div>
+            <div class="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
+                <div class="bg-blue-600 h-2.5 rounded-full" style="width: 45%"></div>
+            </div>
+        </div>
         <h2 class="py-4 text-3xl font-bold text-center text-indigo-600">
             Gallery
         </h2>
@@ -14,14 +19,25 @@
 <script>
 export default {
     mounted() {
-        axios.get('/api/images').then(({data}) => {
-            this.images = data.data
-        })
+        this.getImages()
+
+        setInterval(() => {
+            this.getImages();
+        }, 10000)
+    },
+    methods: {
+        getImages() {
+            axios.get('/api/images').then(({data}) => {
+                if (data.data.length > this.images)
+                    this.images = data.data
+            })
+        },
     },
     data() {
         return {
             images: [],
+            progress: 0
         };
-    }
+    },
 };
 </script>

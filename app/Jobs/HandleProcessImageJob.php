@@ -44,6 +44,6 @@ class HandleProcessImageJob implements ShouldQueue
         /**
          * We have different solutions for running image processing concurrently here we will be using laravel built in job batch
          */
-        Bus::batch($batch)->dispatch();
+        Bus::batch($batch)->name('image-processing')->dispatch();
     }
 }

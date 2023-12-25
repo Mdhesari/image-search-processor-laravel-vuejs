@@ -8,8 +8,6 @@ use App\Http\Resources\ImageResource;
 use App\Http\Resources\ResponseResource;
 use App\Jobs\HandleProcessImageJob;
 use App\Services\Media\MediaConversion;
-use App\Services\SerAPI\Exceptions\SerAPIException;
-use Illuminate\Support\Facades\Log;
 
 class ImageController extends Controller
 {
@@ -31,29 +29,13 @@ class ImageController extends Controller
     {
         $data = $req->validated();
 
-        try {
-            $conversion = new MediaConversion(
-                $data['width'] ?? config('services.media.conversion_width'),
-                $data['height'] ?? config('services.media.conversion_height')
-            );
+        $conversion = new MediaConversion(
+            $data['width'] ?? config('services.media.conversion_width'),
+            $data['height'] ?? config('services.media.conversion_height')
+        );
 
-            dispatch(new HandleProcessImageJob($data['query'], $data['count'], $conversion));
+        dispatch(new HandleProcessImageJob($data['query'], $data['count'], $conversion));
 
-            $response = new ResponseResource([]);
-        } catch (SerAPIException $e) {
-            Log::critical('SerAPI service error: '.$e->getMessage());
-
-            $response = new ResponseResource([
-                'error' => $e->getMessage()
-            ]);
-        } catch (\Exception $e) {
-            Log::critical($e->getMessage());
-
-            $response = new ResponseResource([
-                'error' => 'Unexpected error.',
-            ]);
-        }
-
-        return $response;
+        return new ResponseResource([]);
     }
 }
