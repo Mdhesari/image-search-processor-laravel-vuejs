@@ -16,6 +16,9 @@ import { createApp } from 'vue';
 const app = createApp({});
 
 import GalleryComponent from './components/GalleryComponent.vue';
+import SearchComponent from './components/SearchComponent.vue';
+
+app.component('search', SearchComponent)
 app.component('gallery', GalleryComponent);
 
 /**

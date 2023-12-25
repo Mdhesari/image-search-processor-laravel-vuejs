@@ -12,7 +12,9 @@
 </head>
 <body>
 <div id="app">
-    <gallery />
+    <div class="container mx-auto mt-4">
+        <search/>
+    </div>
 </div>
 </body>
 </html>

@@ -71,4 +71,11 @@ class ImageRepository implements ImageRepositoryContract
             throw new \Exception('Could not insert item.');
         }
     }
+
+    public function getAll(?array $params = null): \Illuminate\Support\Collection
+    {
+        //TODO: shall we have some params
+
+        return $this->builder()->get();
+    }
 }
