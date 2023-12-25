@@ -1,10 +1,9 @@
 <template>
-    <div class="container mx-auto">
+    <div class="container mx-auto mt-4">
         <h2 class="py-4 text-3xl font-bold text-center text-indigo-600">
             Gallery
         </h2>
         <div class="lg:gap-2 lg:grid lg:grid-cols-3">
-            <p v-if="this.images.length < 1">Getting New Images...</p>
             <div class="w-full rounded" v-for="image in images" :key="image.id">
                 <img v-if="this.images.length" :src="image.image" alt="image"/>
             </div>

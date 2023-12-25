@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Contracts\ImageAPIService\ImageAPIServiceContract;
 use App\Contracts\ImageRepository\ImageRepositoryContract;
-use App\Contracts\Media\MediaServiceContract;
 use App\Http\Requests\SearchProcessRequest;
 use App\Http\Resources\ImageResource;
 use App\Http\Resources\ResponseResource;
@@ -17,18 +16,28 @@ use Illuminate\Support\Facades\Log;
 
 class ImageController extends Controller
 {
+    /**
+     * @param ImageRepositoryContract $repo
+     * @return ImageResource
+     */
     public function index(ImageRepositoryContract $repo): ImageResource
     {
         return new ImageResource($repo->getAll());
     }
 
-    public function searchProcess(SearchProcessRequest $req, ImageAPIServiceContract $imgSrv, MediaServiceContract $mediaSrv)
+    /**
+     * @param SearchProcessRequest $req
+     * @param ImageAPIServiceContract $imgSrv
+     * @return ResponseResource
+     * @throws \Throwable
+     */
+    public function searchProcess(SearchProcessRequest $req, ImageAPIServiceContract $imgSrv)
     {
         $data = $req->validated();
 
         try {
-            $items = Cache::remember('image:'.$data['query'].$data['count'], now()->addMinutes(5), function () use ($data) {
-                $searchResult = app(ImageApiServiceContract::class)->search($data['query']);
+            $items = Cache::remember('image:'.$data['query'].$data['count'], now()->addMinutes(5), function () use ($data, $imgSrv) {
+                $searchResult = $imgSrv->search($data['query']);
 
                 return array_slice($searchResult['images_results'], 0, $data['count']);
             });

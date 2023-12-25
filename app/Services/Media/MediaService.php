@@ -4,59 +4,26 @@ namespace App\Services\Media;
 
 use App\Contracts\Media\MediaServiceContract;
 use Illuminate\Http\File;
+use Illuminate\Support\Facades\Log;
 
 class MediaService implements MediaServiceContract
 {
+    private MediaConfig $config;
+
+    private MediaConversion $conversion;
+
+    private array $mimes = ['image/jpg', 'image/png', 'image/jpeg', 'image/bmp'];
+
     public function __construct(
-        private                  $fileAdapter,
-        private MediaConfig      $config,
-        private ?MediaConversion $conversion = null
+        private $fileAdapter,
     )
     {
         //
     }
 
-    /**
-     * @param string $url
-     * @return $this
-     * @throws \Exception
-     */
-    public function mediaFromUrl(string $url)
+    public function config(MediaConfig $config): static
     {
-        $content = file_get_contents($url);
-        $mimetype = null;
-
-        foreach ($http_response_header as $v) {
-            if (preg_match('/^content\-type:\s*(image\/[^;\s\n\r]+)/i', $v, $m)) {
-                $mimetype = $m[1];
-            }
-        }
-        if (! $mimetype) {
-
-            throw new \Exception('Mime Type is invalid.');
-        }
-
-        // We are using the same file name exists in url
-        $path = pathinfo($url, PATHINFO_BASENAME);
-        if (! str_contains($path, '.')) {
-            // TODO: needs more considerations like guessing the file extension by its content
-
-            // Default extension
-            $path .= '.png';
-        }
-
-        $this->fileAdapter->put($this->config->path($path), $content);
-
-        return $this;
-    }
-
-    /**
-     * @param File $file
-     * @return $this
-     */
-    public function media(File $file): static
-    {
-        $this->config = new MediaConfig($file->getPath(), $this->config->MaxSize);
+        $this->config = $config;
 
         return $this;
     }
@@ -68,6 +35,49 @@ class MediaService implements MediaServiceContract
     public function conversion(MediaConversion $conversion): static
     {
         $this->conversion = $conversion;
+
+        return $this;
+    }
+
+    /**
+     * @param string $url
+     * @return $this
+     * @throws \Exception
+     */
+    public function mediaFromUrl(string $url)
+    {
+        $data = $this->download($url);
+
+        // We need mimetype for content assertion
+        $data['header'] = explode(PHP_EOL, $data['header']);
+        $mimetype = $this->getMimeTypeFromHeader($data['header']);
+
+        $ext = explode('/', $mimetype);
+        $ext = $ext[count($ext) - 1];
+
+        // on some cases there are mimetypes like image/svg+xml we should handle that too
+        if ($pos = strpos($ext, '+')) {
+            Log::info($ext);
+
+            $ext = substr($ext, 0, $pos);
+        }
+
+        Log::info($ext);
+
+        $path = rand(1, 99999)."-media.$ext";
+
+        $this->fileAdapter->put($this->config->path($path), $data['content']);
+
+        return $this;
+    }
+
+    /**
+     * @param File $file
+     * @return $this
+     */
+    public function media(File $file): static
+    {
+        $this->config = new MediaConfig($file->getPath(), $this->config->MaxSize);
 
         return $this;
     }
@@ -102,4 +112,68 @@ class MediaService implements MediaServiceContract
 
         return $this;
     }
+
+    private function download(string $url)
+    {
+        $data = [
+            'content' => '',
+            'header'  => '',
+        ];
+
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_HEADER, true);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.1 Safari/537.11');
+        $response = curl_exec($ch);
+
+        $header_size = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
+        $data['header'] = substr($response, 0, $header_size);
+        $data['content'] = substr($response, $header_size);
+
+        curl_close($ch);
+
+        return $data;
+    }
+
+    /**
+     * @param $mimetype
+     * @return bool
+     */
+    private function isSupportedMimeType($mimetype): bool
+    {
+        // for better performance
+        if (! $mimetype) {
+
+            return false;
+        }
+
+        return in_array($mimetype, $this->mimes);
+    }
+
+    /**
+     * @param array $header
+     * @return mixed|null
+     * @throws \Exception
+     */
+    private function getMimeTypeFromHeader(array $header)
+    {
+        $mimetype = null;
+        foreach ($header as $h) {
+            if (preg_match('/^content\-type:\s*(image\/[^;\s\n\r]+)/i', $h, $m)) {
+                $mimetype = $m[1];
+            }
+        }
+
+        if (! $this->isSupportedMimeType($mimetype)) {
+            Log::critical('Source image mime type is invalid');
+
+            throw new \Exception('Mime Type is invalid.');
+        }
+
+        return $mimetype;
+    }
+
+
 }

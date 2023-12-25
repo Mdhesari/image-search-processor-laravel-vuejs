@@ -3,6 +3,8 @@
 namespace App\Services\Media;
 
 //TODO: make conversions specific by composition design pattern and give more flexibility
+use Illuminate\Support\Facades\Log;
+
 class MediaConversion
 {
     private ?\GdImage $image;

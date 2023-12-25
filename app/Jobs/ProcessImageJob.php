@@ -4,13 +4,13 @@ namespace App\Jobs;
 
 use App\Contracts\ImageRepository\ImageRepositoryContract;
 use App\Contracts\Media\MediaServiceContract;
+use App\Services\Media\MediaConfig;
 use App\Services\Media\MediaConversion;
 use Illuminate\Bus\Batchable;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
-use Illuminate\Queue\Middleware\SkipIfBatchCancelled;
 use Illuminate\Queue\SerializesModels;
 
 class ProcessImageJob implements ShouldQueue
@@ -33,13 +33,12 @@ class ProcessImageJob implements ShouldQueue
      */
     public function handle(MediaServiceContract $srv, ImageRepositoryContract $repo): void
     {
-        $url = $srv->mediaFromUrl($this->item['original']);
-
-        if (! $url) {
-
-            return;
-        }
-        $url = $url->conversion($this->conversion)->apply()->save()->getUrl();
+        $url = $srv->config(new MediaConfig('media', 100000))
+            ->mediaFromUrl($this->item['original'])
+            ->conversion($this->conversion)
+            ->apply()
+            ->save()
+            ->getUrl();
 
         $this->item['image'] = $url;
         $this->item['resized_width'] = $this->conversion->Width;
@@ -54,6 +53,6 @@ class ProcessImageJob implements ShouldQueue
     public function middleware(): array
     {
         // It does not matter if other image processor are failed
-        return [new SkipIfBatchCancelled];
+        return [];
     }
 }

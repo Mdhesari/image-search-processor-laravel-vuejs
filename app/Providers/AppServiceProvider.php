@@ -30,7 +30,7 @@ class AppServiceProvider extends ServiceProvider
         });
 
         $this->app->singleton(MediaServiceContract::class, function (Application $app) {
-            return new MediaService(Storage::getFacadeRoot(), new MediaConfig('media', 10000));
+            return new MediaService(Storage::getFacadeRoot());
         });
     }
 
