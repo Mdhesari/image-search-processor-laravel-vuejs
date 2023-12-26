@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\BatchController;
 use App\Http\Controllers\ImageController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -22,3 +23,5 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 Route::get('images', [ImageController::class, 'index']);
 
 Route::post('images/search-process', [ImageController::class, 'searchProcess']);
+
+Route::get('batches', BatchController::class);

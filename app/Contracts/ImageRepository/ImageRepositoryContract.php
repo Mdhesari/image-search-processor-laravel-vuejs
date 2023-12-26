@@ -8,5 +8,5 @@ interface ImageRepositoryContract
 
     public function store(array $item);
 
-    public function getAll(?array $params = null);
+    public function get(?array $params = null);
 }

@@ -1,6 +1,5 @@
 <template>
     <div class="mb-4 px-2 w-full">
-        <alert-success v-if="success" title="Successfully processed." :description="successMessage"></alert-success>
         <alert-failure v-if="error !== ''" :title="error"/>
         <div class="relative">
             <div class="absolute left-0 inset-y-0 pl-3 flex items-center">
@@ -16,7 +15,7 @@
                 type="text" placeholder="Search..."/>
         </div>
     </div>
-    <div class="inline-flex">
+    <div class="inline-flex mb-4">
         <div class="select-none border py-2 px-4 cursor-pointer bg-gray-100 hover:bg-gray-200 rounded-l"
              @click="decrease">
             -
@@ -54,12 +53,40 @@
             <span v-if="!loading">Process</span>
         </button>
     </div>
-    <gallery/>
+    <alert-success v-if="success" :title="successMessage"></alert-success>
+    <progress-bar v-for="b in batches" :key="b.id" :progress="b.progress"/>
+    <gallery :count="count"/>
 </template>
 
 <script>
 export default {
+    mounted() {
+        setInterval(() => {
+            this.progress()
+        }, 5000)
+    },
     methods: {
+        progress() {
+            axios.get('api/batches', {
+                params: {
+                    // TODO: we should consider filtering user but as the purpose of this simple app is to showcase skills we avoid that
+                    // name: 'image-processing',
+                    status: 'pending',
+                }
+            }).then(({data}) => {
+                this.batches = data.data.map(({id, pending_jobs, failed_jobs, total_jobs}) => {
+                    return {
+                        id: id,
+                        progress: (total_jobs - (pending_jobs + failed_jobs)) / total_jobs * 100,
+                    }
+                })
+
+                if (!this.batches.length)
+                    this.success = false
+
+                this.batches = this.batches.filter((b) => b.progress > 0)
+            })
+        },
         process() {
             this.loading = true
             this.error = ""
@@ -68,11 +95,11 @@ export default {
                 count: this.count,
                 width: this.width,
                 height: this.height
-            }).then(({data}) => {
+            }).then(() => {
                 this.success = true
                 this.successMessage = "Image search is processing your request."
 
-                setTimeout(() => this.success = false, 5000)
+                this.progress()
             }).catch(({response}) => {
                 if (response.data?.errors) {
                     let errors = response.data.errors
@@ -86,8 +113,6 @@ export default {
             }).finally(() => {
                 this.loading = false
             })
-
-            //TODO: trigger event to gallery for loading new images
         },
         increase() {
             this.count++;
@@ -107,7 +132,8 @@ export default {
             success: false,
             successMessage: "",
             error: "",
-            loading: false
+            loading: false,
+            batches: [],
         };
     },
 };

@@ -3,18 +3,20 @@
 namespace App\Repositories\Postgres;
 
 use App\Contracts\ImageRepository\ImageRepositoryContract;
+use Exception;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\ConnectionInterface;
+use Illuminate\Database\Query\Builder;
 
 /**
  * We avoid using eloquent in this repo for better performance
  */
 class ImageRepository implements ImageRepositoryContract
 {
-    const DEFAULT_PER_PAGE = 10;
-
     public function __construct(
         private ConnectionInterface $connection,
-        private string              $table
+        private string              $table,
+        private int                 $perPage = 10,
     )
     {
         //
@@ -22,7 +24,7 @@ class ImageRepository implements ImageRepositoryContract
 
     /**
      * @param array $items
-     * @throws \Exception
+     * @throws Exception
      */
     public function storeMany(array $items)
     {
@@ -41,18 +43,13 @@ class ImageRepository implements ImageRepositoryContract
         $res = $this->builder()->insert($items);
         if (! $res) {
 
-            throw new \Exception('Could not insert items.');
+            throw new Exception('Could not insert items.');
         }
-    }
-
-    private function builder(): \Illuminate\Database\Query\Builder
-    {
-        return $this->connection->table($this->table);
     }
 
     /**
      * @param array $item
-     * @throws \Exception
+     * @throws Exception
      */
     public function store(array $item)
     {
@@ -72,14 +69,24 @@ class ImageRepository implements ImageRepositoryContract
         $res = $this->builder()->insert($item);
         if (! $res) {
 
-            throw new \Exception('Could not insert item.');
+            throw new Exception('Could not insert item.');
         }
     }
 
-    public function getAll(?array $params = null)
+    /**
+     * @param array|null $params
+     * @return LengthAwarePaginator
+     */
+    public function get(?array $params = null)
     {
-        $params['per_page'] = $params['per_page'] ?? self::DEFAULT_PER_PAGE;
+        return $this->builder()->latest()->paginate($params['per_page'] ?? $this->perPage);
+    }
 
-        return $this->builder()->latest()->paginate($params['per_page']);
+    /**
+     * @return Builder
+     */
+    private function builder(): Builder
+    {
+        return $this->connection->table($this->table);
     }
 }

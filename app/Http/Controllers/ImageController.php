@@ -17,7 +17,7 @@ class ImageController extends Controller
      */
     public function index(ImageRepositoryContract $repo): ImageResource
     {
-        return new ImageResource($repo->getAll());
+        return new ImageResource($repo->get());
     }
 
     /**

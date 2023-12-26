@@ -24,7 +24,7 @@ app.component('search', SearchComponent);
 app.component('gallery', GalleryComponent);
 app.component('alert-success', SuccessComponent);
 app.component('alert-failure', FailureComponent);
-app.component('progress', ProgressComponent);
+app.component('progress-bar', ProgressComponent);
 
 /**
  * The following block of code may be used to automatically register your
