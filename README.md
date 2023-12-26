@@ -1,9 +1,5 @@
 # Image Search Processor
 
-## Overview
-
-This project is an image processing script designed for full-stack developers proficient in PHP, Laravel, and Vue.js. It allows users to download, resize, and securely store images from Google search results based on specified queries.
-
 ## Features
 
 - Image downloading from Google search results.
