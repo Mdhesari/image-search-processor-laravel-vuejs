@@ -5,6 +5,7 @@ namespace App\Services\SerAPI;
 use App\Contracts\ImageAPIService\ImageAPIServiceContract;
 use App\Services\SerAPI\Exceptions\SerAPIException;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class SerAPIService implements ImageAPIServiceContract
 {
@@ -22,6 +23,8 @@ class SerAPIService implements ImageAPIServiceContract
      */
     public function search(string $query): array
     {
+        Log::info('called!');
+
         $response = Http::get("https://serpapi.com/search.json?engine=google_images&api_key={$this->apiKey}&q={$query}&hl=en&gl=us&tbs=il:cl");
         if (isset($response['error'])) {
 

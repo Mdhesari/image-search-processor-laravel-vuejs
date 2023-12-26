@@ -2,14 +2,9 @@
 
 namespace App\Console\Commands;
 
-use App\Contracts\ImageAPIService\ImageAPIServiceContract;
-use App\Jobs\ProcessImageJob;
+use App\Jobs\HandleProcessImageJob;
 use App\Services\Media\MediaConversion;
-use App\Services\SerAPI\Exceptions\SerAPIException;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Bus;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Log;
 
 class ImageSearchProcessor extends Command
 {
@@ -18,7 +13,7 @@ class ImageSearchProcessor extends Command
      *
      * @var string
      */
-    protected $signature = 'app:process {query} {--count=10}';
+    protected $signature = 'app:process {query} {--width=} {--height=} {--count=10}';
 
     /**
      * The console command description.
@@ -35,37 +30,13 @@ class ImageSearchProcessor extends Command
     {
         $query = $this->argument('query');
         $count = $this->option('count');
+        $width = $this->option('width') ?: config('services.media.conversion_width');
+        $height = $this->option('width') ?: config('services.media.conversion_height');
 
-        try {
-            $items = Cache::rememberForever('test', function () use ($query, $count) {
-                $searchResult = app(ImageApiServiceContract::class)->search($query);
+        dispatch(new HandleProcessImageJob($query, $count, new MediaConversion($width, $height)));
 
-                return array_slice($searchResult['images_results'], 0, $count);
-            });
+        $this->info('Your request has been processed and sent to queue.');
 
-            $conversion = new MediaConversion(
-                config('services.media.conversion_width'),
-                config('services.media.conversion_height')
-            );
-
-            /**
-             * We have different solutions for running image processing concurrently here we will be using laravel built in job batch
-             */
-            $items = array_map(fn($i) => new ProcessImageJob($i, $conversion), $items);
-            $batch = Bus::batch($items)->dispatch();
-
-            $this->info('batching '.$batch->id);
-
-            $this->info('Images are store in db successfully...');
-        } catch (SerAPIException $e) {
-            Log::critical('SerAPI service error: '.$e->getMessage());
-
-            $this->error($e->getMessage());
-        } catch (\Exception $e) {
-            Log::critical($e->getMessage());
-
-            throw $e;
-        }
-
+        return self::SUCCESS;
     }
 }
