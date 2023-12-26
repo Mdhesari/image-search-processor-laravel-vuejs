@@ -10,6 +10,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Log;
 
 class HandleProcessImageJob implements ShouldQueue
 {
@@ -44,8 +45,16 @@ class HandleProcessImageJob implements ShouldQueue
             $result = array_fill(count($result), $this->count - count($result), $result[0]);
         }
 
-        for ($i = 0; $i < $this->count; $i++) {
-            dispatch(new ProcessImageJob($this->query, $this->conversion, $result[$i]));
+        try {
+            for ($i = 0; $i < $this->count; $i++) {
+                dispatch(new ProcessImageJob($this->query, $this->conversion, $result[$i]));
+            }
+        } catch (\Exception $e ){
+            Log::info($e);
+
+            Log::info($result);
+
+            throw $e;
         }
     }
 }

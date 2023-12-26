@@ -2,11 +2,9 @@
 
 namespace App\Providers;
 
-use App\Contracts\BatchRepository\BatchRepositoryContract;
 use App\Contracts\ImageAPIService\ImageAPIServiceContract;
 use App\Contracts\ImageRepository\ImageRepositoryContract;
 use App\Contracts\Media\MediaServiceContract;
-use App\Repositories\Postgres\BatchRepository;
 use App\Repositories\Postgres\ImageRepository;
 use App\Services\Media\MediaService;
 use App\Services\SerAPI\SerAPIService;
@@ -39,10 +37,6 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->app->bind(ImageRepositoryContract::class, function (Application $app) {
             return new ImageRepository(DB::Connection(), 'images');
-        });
-
-        $this->app->bind(BatchRepositoryContract::class, function (Application $app) {
-            return new BatchRepository(DB::connection(), 'job_batches');
         });
     }
 

@@ -53,40 +53,14 @@
             <span v-if="!loading">Process</span>
         </button>
     </div>
-    <alert-success v-if="success" :title="successMessage"></alert-success>
-    <progress-bar v-for="b in batches" :key="b.id" :progress="b.progress"/>
+    <alert-success v-if="success" :title="successMessage"
+                   description="Please wait a little bit to see the result..."></alert-success>
     <gallery :count="count"/>
 </template>
 
 <script>
 export default {
-    mounted() {
-        setInterval(() => {
-            this.progress()
-        }, 5000)
-    },
     methods: {
-        progress() {
-            axios.get('api/batches', {
-                params: {
-                    // TODO: we should consider filtering user but as the purpose of this simple app is to showcase skills we avoid that
-                    // name: 'image-processing',
-                    status: 'pending',
-                }
-            }).then(({data}) => {
-                this.batches = data.data.map(({id, pending_jobs, failed_jobs, total_jobs}) => {
-                    return {
-                        id: id,
-                        progress: (total_jobs - (pending_jobs + failed_jobs)) / total_jobs * 100,
-                    }
-                })
-
-                if (!this.batches.length)
-                    this.success = false
-
-                this.batches = this.batches.filter((b) => b.progress > 0)
-            })
-        },
         process() {
             this.loading = true
             this.error = ""
@@ -98,8 +72,6 @@ export default {
             }).then(() => {
                 this.success = true
                 this.successMessage = "Image search is processing your request."
-
-                this.progress()
             }).catch(({response}) => {
                 if (response.data?.errors) {
                     let errors = response.data.errors
@@ -133,7 +105,6 @@ export default {
             successMessage: "",
             error: "",
             loading: false,
-            batches: [],
         };
     },
 };

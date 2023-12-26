@@ -57,12 +57,8 @@ class MediaService implements MediaServiceContract
 
         // on some cases there are mimetypes like image/svg+xml we should handle that too
         if ($pos = strpos($ext, '+')) {
-            Log::info($ext);
-
             $ext = substr($ext, 0, $pos);
         }
-
-        Log::info($ext);
 
         $path = rand(1, 99999)."-media.$ext";
 

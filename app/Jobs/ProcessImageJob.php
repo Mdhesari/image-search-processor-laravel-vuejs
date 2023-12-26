@@ -52,7 +52,8 @@ class ProcessImageJob implements ShouldQueue
          * Sometimes the fetched images are not correct, so we do our best to do our job :)
          */
         try {
-            $media = collect($this->items)->first();
+            // Handle new images for new try attempts
+            $media = $this->items[$this->attempts() - 1] ?? $this->items[count($this->items) - 1];
 
             $url = $mediaSrv->config(new MediaConfig('media', 100000))
                 ->mediaFromUrl($media['original'])
@@ -68,13 +69,11 @@ class ProcessImageJob implements ShouldQueue
 
             $repo->store($media);
         } catch (\Exception $e) {
-//            if ($this->attempts() > $this->maxExceptions) {
-//                throw $e;
-//            }
+            if ($this->attempts() > $this->maxExceptions) {
+                throw $e;
+            }
 
-//            $this->release(180);
-
-            throw $e;
+            $this->release(180);
 
             return;
         }

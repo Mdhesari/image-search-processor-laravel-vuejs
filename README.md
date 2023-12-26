@@ -11,13 +11,6 @@ This project is an image processing script designed for full-stack developers pr
 - Secure storage of resized images in a PostgreSQL database.
 - User-friendly interface for inputting search queries and viewing/download resized images.
 
-## Technology Stack
-
-- PHP
-- Laravel
-- Vue.js
-- PostgreSQL
-
 ## Getting Started
 
 ### Prerequisites
@@ -29,4 +22,55 @@ This project is an image processing script designed for full-stack developers pr
 
 ### Installation
 
-...
+1. Clone the repository:
+
+   ```bash
+   git clone https://github.com/mdhesari/image-search-processor-laravel-vuejs.git
+   ```
+   
+2. Install PHP dependencies:
+
+   ```bash
+   composer install
+   ```
+3. Install Javascript & Vuejs dependencies:
+
+    ```bash
+    npm install
+    ```
+    
+4. Configure your environment variables:
+
+    ```bash
+    cp .env.example .env
+    ```
+    
+5. Application Key:
+
+    ```bash
+    php artisan key:generate
+    ```
+
+5. Run Docker Compose:
+
+    ```bash
+    docker compose up -d
+    ```
+    
+6. Run migrations:
+
+    ```
+    sail artisan migrate
+    ```
+
+7. Build the Vue.js frontend:
+
+    ```
+    npm run dev
+    ```
+
+8. Run Horizon:
+
+    ```
+    sail artisan horizon
+    ```

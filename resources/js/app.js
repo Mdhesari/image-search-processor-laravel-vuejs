@@ -10,7 +10,6 @@ import GalleryComponent from './components/GalleryComponent.vue';
 import SearchComponent from './components/SearchComponent.vue';
 import SuccessComponent from './components/Alerts/SucessComponent.vue';
 import FailureComponent from './components/Alerts/FailureComponent.vue';
-import ProgressComponent from './components/Progress/ProgressComponent.vue'
 
 /**
  * Next, we will create a fresh Vue application instance. You may then begin
@@ -24,7 +23,6 @@ app.component('search', SearchComponent);
 app.component('gallery', GalleryComponent);
 app.component('alert-success', SuccessComponent);
 app.component('alert-failure', FailureComponent);
-app.component('progress-bar', ProgressComponent);
 
 /**
  * The following block of code may be used to automatically register your
