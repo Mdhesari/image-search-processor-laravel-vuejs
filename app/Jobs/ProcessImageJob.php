@@ -48,13 +48,11 @@ class ProcessImageJob implements ShouldQueue
      */
     public function handle(ImageRepositoryContract $repo, MediaServiceContract $mediaSrv): void
     {
-        /**
-         * Sometimes the fetched images are not correct, so we do our best to do our job :)
-         */
         try {
             // Handle new images for new try attempts
             $media = $this->items[$this->attempts() - 1] ?? $this->items[count($this->items) - 1];
 
+            // We could also separate conversion service
             $url = $mediaSrv->config(new MediaConfig('media', 100000))
                 ->mediaFromUrl($media['original'])
                 ->conversion($this->conversion)
@@ -69,6 +67,9 @@ class ProcessImageJob implements ShouldQueue
 
             $repo->store($media);
         } catch (\Exception $e) {
+            /**
+             * Sometimes the fetched images are not correct, so we do our best to do our job :)
+             */
             if ($this->attempts() > $this->maxExceptions) {
                 throw $e;
             }
