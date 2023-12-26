@@ -10,7 +10,6 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Log;
 
 class HandleProcessImageJob implements ShouldQueue
 {
@@ -37,7 +36,6 @@ class HandleProcessImageJob implements ShouldQueue
         $result = $imageSrv->search($this->query)['images_results'];
 
         // in order to have replaceable media
-        // Todo: length could be changeable
         $result = array_chunk($result, 5);
 
         if (count($result) < $this->count) {
@@ -45,16 +43,8 @@ class HandleProcessImageJob implements ShouldQueue
             $result = array_fill(count($result), $this->count - count($result), $result[0]);
         }
 
-        try {
-            for ($i = 0; $i < $this->count; $i++) {
-                dispatch(new ProcessImageJob($this->query, $this->conversion, $result[$i]));
-            }
-        } catch (\Exception $e ){
-            Log::info($e);
-
-            Log::info($result);
-
-            throw $e;
+        for ($i = 0; $i < $this->count; $i++) {
+            dispatch(new ProcessImageJob($this->query, $this->conversion, $result[$i]));
         }
     }
 }

@@ -28,6 +28,11 @@ class MediaService implements MediaServiceContract
         return $this;
     }
 
+    public function getConfig()
+    {
+        return $this->config;
+    }
+
     /**
      * @param MediaConversion $conversion
      * @return $this
