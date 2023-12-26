@@ -4,14 +4,12 @@ namespace App\Jobs;
 
 use App\Contracts\ImageAPIService\ImageAPIServiceContract;
 use App\Services\Media\MediaConversion;
+use App\Services\SerAPI\Exceptions\SerAPIException;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Bus;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Str;
 
 class HandleProcessImageJob implements ShouldQueue
 {
@@ -31,20 +29,23 @@ class HandleProcessImageJob implements ShouldQueue
 
     /**
      * Execute the job.
+     * @throws SerAPIException
      */
     public function handle(ImageAPIServiceContract $imageSrv): void
     {
-        $result = $imageSrv->search($this->query);
-        $cacheKey = Str::random().time();
-        Cache::put($cacheKey, $result['images_results'], today()->addDay());
+        $result = $imageSrv->search($this->query)['images_results'];
 
-        $job = new ProcessImageJob($this->query, $this->conversion, $cacheKey);
-        $batch = array_fill(0, $this->count, $job);
+        // in order to have replaceable media
+        // Todo: length could be changeable
+        $result = array_chunk($result, 5);
 
-        /**
-         * We have different solutions for running image processing concurrently here we will be using laravel built in job batch
-         * TODO: ->name('image-processing')
-         */
-        Bus::batch($batch)->dispatch();
+        if (count($result) < $this->count) {
+            // TODO: this is temporary for handling big count
+            $result = array_fill(count($result), $this->count - count($result), $result[0]);
+        }
+
+        for ($i = 0; $i < $this->count; $i++) {
+            dispatch(new ProcessImageJob($this->query, $this->conversion, $result[$i]));
+        }
     }
 }

@@ -2,23 +2,19 @@
 
 namespace App\Jobs;
 
-use App\Contracts\ImageAPIService\ImageAPIServiceContract;
 use App\Contracts\ImageRepository\ImageRepositoryContract;
 use App\Contracts\Media\MediaServiceContract;
 use App\Services\Media\MediaConfig;
 use App\Services\Media\MediaConversion;
-use Illuminate\Bus\Batchable;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Redis;
 
 class ProcessImageJob implements ShouldQueue
 {
-    use Batchable, Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     /**
      * The number of times the job may be attempted.
@@ -40,7 +36,7 @@ class ProcessImageJob implements ShouldQueue
     public function __construct(
         private string          $query,
         private MediaConversion $conversion,
-        private string          $cacheKey,
+        private array           $items,
     )
     {
         //
@@ -55,8 +51,8 @@ class ProcessImageJob implements ShouldQueue
         /**
          * Sometimes the fetched images are not correct, so we do our best to do our job :)
          */
-        Redis::throttle($this->batchId)->allow(10)->every(60)->then(function () use ($repo, $mediaSrv) {
-            $media = $this->getMediaItem();
+        try {
+            $media = collect($this->items)->first();
 
             $url = $mediaSrv->config(new MediaConfig('media', 100000))
                 ->mediaFromUrl($media['original'])
@@ -71,43 +67,40 @@ class ProcessImageJob implements ShouldQueue
             $media['resized_height'] = $this->conversion->Height;
 
             $repo->store($media);
-        }, function () {
-            // Unable to obtain lock...
-            $this->release(10);
-        });
+        } catch (\Exception $e) {
+//            if ($this->attempts() > $this->maxExceptions) {
+//                throw $e;
+//            }
+
+//            $this->release(180);
+
+            throw $e;
+
+            return;
+        }
+    }
+
+    public function retryUntil()
+    {
+        // will keep retrying, by backoff logic below
+        // until 12 hours from first run.
+        // After that, if it fails it will go
+        // to the failed_jobs table
+        return now()->addHours(12);
     }
 
     /**
+     * Calculate the number of seconds to wait before retrying the job.
+     *
      * @return array
-     * @throws \Exception
      */
-    private function getMediaItem(): array
+    public function backoff()
     {
-        $items = $this->getMediaItems();
-
-        if (! $items || empty($items)) {
-
-            throw new \Exception("Could not fetch media items.");
-        }
-
-        $item = $items[0];
-
-        // avoid duplication for other batch jobs
-        array_shift($items);
-        Cache::put($this->cacheKey, $items);
-
-        return $item;
-    }
-
-    private function getMediaItems()
-    {
-        $query = $this->query;
-
-        // In case of missing the cache key
-        return Cache::remember($this->cacheKey, today()->addDay(), function () use ($query) {
-            $searchResult = app(ImageAPIServiceContract::class)->search($query);
-
-            return $searchResult['images_results'];
-        });
+        // first 5 retries, after first failure
+        // will be 5 minutes (300 seconds) apart,
+        // further attempts will be
+        // 3 hours (10,800 seconds) after
+        // previous attempt
+        return [300, 300, 300, 300, 300, 10800];
     }
 }
