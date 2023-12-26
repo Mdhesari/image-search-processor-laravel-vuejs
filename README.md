@@ -45,6 +45,8 @@ This project is an image processing script designed for full-stack developers pr
     cp .env.example .env
     ```
     
+    Please register an account in https://serpapi.com/ and set SERAPI_API_KEY in .env
+    
 5. Application Key:
 
     ```bash
